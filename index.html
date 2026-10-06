@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarn Wallet · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f5f2;
+  --surface: #ffffff;
+  --surface-2: #f0f0ec;
+  --ink: #16181d;
+  --muted: #666b78;
+  --line: #e2e2dc;
+  --accent: #2c6b66;
+  --accent-ink: #ffffff;
+  --accent-tint: #e4efed;
+  --warn: #8a5a12;
+  --warn-tint: #f7ecd6;
+  --ok: #2c6b3f;
+  --ok-tint: #e1f0e5;
+  --bad: #9b2f2f;
+  --bad-tint: #f6e1e1;
+  --shadow: 0 1px 2px rgba(22, 24, 29, .05);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+[data-theme="dark"] {
+  --bg: #0f1113;
+  --surface: #171a1d;
+  --surface-2: #1e2226;
+  --ink: #ebebe7;
+  --muted: #8e939e;
+  --line: #292d33;
+  --accent: #6dbab1;
+  --accent-ink: #0c1413;
+  --accent-tint: #19292a;
+  --warn: #e1b563;
+  --warn-tint: #2a2214;
+  --ok: #7ac592;
+  --ok-tint: #16261b;
+  --bad: #e58a8a;
+  --bad-tint: #2b1819;
+  --shadow: none;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background .3s var(--ease), color .3s var(--ease);
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- shell ---------- */
+.app { display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
+.sidebar {
+  position: sticky; top: 0; height: 100vh;
+  background: var(--surface); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; padding: 22px 14px 18px;
+  transition: transform .3s var(--ease);
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 4px 10px 22px; }
+.brand-mark {
+  width: 32px; height: 32px; border-radius: 9px; background: var(--ink); color: var(--bg);
+  display: grid; place-items: center; font-weight: 700; font-size: 17px; letter-spacing: -.03em;
+}
+.brand-name { font-weight: 650; font-size: 17px; letter-spacing: -.02em; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav button {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; border: 0; background: transparent; color: var(--muted);
+  border-radius: 9px; text-align: left; font-weight: 500;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.nav button:hover { background: var(--surface-2); color: var(--ink); }
+.nav button[aria-current="page"] { background: var(--accent-tint); color: var(--accent); }
+.nav-sep { height: 1px; background: var(--line); margin: 12px 10px; }
+
+.main { min-width: 0; }
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 14px; padding: 14px 36px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { font-size: 18px; font-weight: 600; letter-spacing: -.015em; }
+.menu-btn { display: none; }
+.spacer { flex: 1; }
+.icon-btn {
+  position: relative; width: 38px; height: 38px; display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--muted);
+  transition: color .2s, border-color .2s;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--muted); }
+.badge-dot {
+  position: absolute; top: 7px; right: 8px; min-width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--surface);
+}
+.user { display: flex; align-items: center; gap: 10px; padding-left: 4px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; font-weight: 600; font-size: 13px; }
+.user-meta { line-height: 1.25; }
+.user-meta b { font-weight: 600; font-size: 14px; display: block; }
+.user-meta span { font-size: 12px; color: var(--muted); }
+
+.content { padding: 32px 36px 56px; max-width: 1180px; margin: 0 auto; }
+.page-head { margin-bottom: 24px; }
+.page-head h2 { font-size: 26px; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; }
+.page-head p { color: var(--muted); margin-top: 4px; max-width: 60ch; }
+
+/* ---------- primitives ---------- */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.card-pad { padding: 24px; }
+.card-title { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 14.5px;
+  border: 1px solid var(--line); background: var(--surface); transition: background .2s, border-color .2s, transform .15s var(--ease), opacity .2s;
+}
+.btn:hover { border-color: var(--muted); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--ink); background: var(--surface-2); }
+.btn[disabled] { opacity: .55; cursor: not-allowed; }
+.btn.sm { padding: 7px 12px; font-size: 13px; border-radius: 8px; }
+.link { color: var(--accent); background: none; border: 0; font-weight: 600; font-size: 13.5px; }
+.link:hover { text-decoration: underline; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; font-size: 12.5px; font-weight: 600; }
+.pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.ok { background: var(--ok-tint); color: var(--ok); }
+.pill.pending { background: var(--warn-tint); color: var(--warn); }
+.pill.bad { background: var(--bad-tint); color: var(--bad); }
+
+.notice {
+  display: flex; gap: 12px; padding: 14px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5;
+  background: var(--accent-tint); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.notice svg { color: var(--accent); margin-top: 2px; }
+.notice.warn { background: var(--warn-tint); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+.notice.warn svg { color: var(--warn); }
+.notice b { font-weight: 600; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .field .lab { font-size: 13px; font-weight: 600; }
+.field .hint { font-size: 12.5px; color: var(--muted); }
+.input {
+  width: 100%; padding: 11px 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.input.err { border-color: var(--bad); }
+.err-text { color: var(--bad); font-size: 13px; min-height: 0; }
+.amount-wrap { position: relative; }
+.amount-wrap span { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 24px; color: var(--muted); }
+.amount-wrap input { font-size: 28px; font-weight: 600; padding: 14px 16px 14px 38px; letter-spacing: -.02em; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+
+.opts { display: grid; gap: 10px; }
+.opt { position: relative; display: block; }
+.opt input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.opt-body {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  transition: border-color .2s, background .2s;
+}
+.opt:hover .opt-body { border-color: var(--muted); }
+.opt input:checked + .opt-body { border-color: var(--accent); background: var(--accent-tint); }
+.opt input:focus-visible + .opt-body { outline: 2px solid var(--accent); outline-offset: 2px; }
+.radio-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none; display: grid; place-items: center; }
+.opt input:checked + .opt-body .radio-dot { border-color: var(--accent); }
+.opt input:checked + .opt-body .radio-dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.opt-text { flex: 1; min-width: 0; }
+.opt-text b { font-weight: 600; display: block; }
+.opt-text span { font-size: 13px; color: var(--muted); }
+.opt-fee { font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+/* ---------- overview ---------- */
+.stats { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.stat { padding: 22px 24px; }
+.stat .big { font-size: 38px; font-weight: 600; letter-spacing: -.035em; line-height: 1.15; margin: 6px 0 2px; }
+.stat .mid { font-size: 28px; font-weight: 600; letter-spacing: -.03em; margin: 6px 0 2px; }
+.stat .sub { font-size: 13px; color: var(--muted); }
+.stat-hero { display: flex; flex-direction: column; justify-content: space-between; }
+.hero-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.cols { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; align-items: start; }
+.rows { display: flex; flex-direction: column; }
+.row {
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 14px;
+  padding: 13px 0; border-top: 1px solid var(--line);
+}
+.row:first-child { border-top: 0; padding-top: 0; }
+.row:last-child { padding-bottom: 0; }
+.ico { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; color: var(--muted); }
+.row-main b { font-weight: 600; display: block; font-size: 14.5px; }
+.row-main span { font-size: 12.5px; color: var(--muted); }
+.row-amt { text-align: right; font-weight: 600; }
+.row-amt span { display: block; font-size: 12.5px; font-weight: 500; margin-top: 2px; }
+.amt-in { color: var(--ok); }
+.note { display: grid; grid-template-columns: 8px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.note:first-child { border-top: 0; padding-top: 0; }
+.note i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); margin-top: 7px; }
+.note.unread i { background: var(--accent); }
+.note b { font-weight: 600; font-size: 14px; display: block; }
+.note p { font-size: 13px; color: var(--muted); }
+.note time { font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+.empty { padding: 26px 0; text-align: center; color: var(--muted); font-size: 14px; }
+.empty-card { padding: 36px 24px; text-align: center; }
+.empty-card .ico-wrap { width: 52px; height: 52px; border-radius: 14px; background: var(--surface-2); display: grid; place-items: center; margin: 0 auto 14px; color: var(--muted); }
+.empty-card b { display: block; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.empty-card p { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; max-width: 42ch; margin-left: auto; margin-right: auto; }
+
+/* ---------- table ---------- */
+.table-wrap { overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 13px; font-weight: 500; color: var(--muted); padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+td { padding: 15px 20px; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+tr:last-child td { border-bottom: 0; }
+td.right, th.right { text-align: right; }
+.mono { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13.5px; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.chip { padding: 7px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); font-size: 13.5px; font-weight: 500; color: var(--muted); transition: all .2s; }
+.chip:hover { color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ---------- stepper ---------- */
+.stepper { display: flex; gap: 6px; margin-bottom: 28px; overflow-x: auto; padding-bottom: 4px; list-style: none; }
+.step { flex: 1; min-width: 120px; }
+.step-bar { height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.step-bar::after { content: ''; display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s var(--ease); }
+.step.done .step-bar::after, .step.current .step-bar::after { width: 100%; }
+.step span { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+.step.current span { color: var(--ink); font-weight: 600; }
+.step.done span { color: var(--accent); }
+.flow { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; align-items: start; }
+.panel-in { animation: panelIn .35s var(--ease); }
+@keyframes panelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 24px; flex-wrap: wrap; }
+.actions .right { display: flex; gap: 10px; flex-wrap: wrap; }
+.summary { display: flex; flex-direction: column; }
+.sum-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+.sum-row:first-child { border-top: 0; padding-top: 0; }
+.sum-row span:first-child { color: var(--muted); }
+.sum-row b { font-weight: 600; text-align: right; }
+.sum-row.total { font-size: 16px; }
+.sum-row.total span:first-child { color: var(--ink); font-weight: 600; }
+.sum-row.emph { background: var(--accent-tint); margin: 6px -24px -24px; padding: 18px 24px; border-radius: 0 0 14px 14px; border-top: 1px solid var(--line); }
+.sum-row.emph b { color: var(--accent); font-size: 20px; letter-spacing: -.02em; }
+.check { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.divider { height: 1px; background: var(--line); margin: 4px 0; }
+
+.timeline { list-style: none; display: flex; flex-direction: column; gap: 0; }
+.tl { display: grid; grid-template-columns: 22px 1fr; gap: 14px; position: relative; padding-bottom: 22px; }
+.tl:last-child { padding-bottom: 0; }
+.tl::before { content: ''; position: absolute; left: 10px; top: 22px; bottom: 0; width: 2px; background: var(--line); }
+.tl:last-child::before { display: none; }
+.tl .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; z-index: 1; color: var(--accent-ink); }
+.tl.done .dot { background: var(--accent); border-color: var(--accent); }
+.tl.done::before { background: var(--accent); }
+.tl.current .dot { border-color: var(--accent); }
+.tl.current .dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.8s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.tl b { font-weight: 600; display: block; }
+.tl span { font-size: 13px; color: var(--muted); }
+.tl:not(.done):not(.current) b { color: var(--muted); font-weight: 500; }
+.status-head { display: flex; gap: 16px; align-items: center; margin-bottom: 22px; }
+.status-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-tint); color: var(--accent); display: grid; place-items: center; }
+.status-icon svg { width: 24px; height: 24px; }
+
+/* ---------- misc views ---------- */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.kv { display: grid; grid-template-columns: 160px 1fr; gap: 10px 16px; font-size: 14.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { font-weight: 500; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+.toggle-row:first-of-type { border-top: 0; }
+.toggle-row b { font-weight: 600; display: block; }
+.toggle-row span { font-size: 13px; color: var(--muted); }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.switch i { position: absolute; inset: 0; background: var(--line); border-radius: 99px; transition: background .25s; }
+.switch i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .25s var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch input:checked + i { background: var(--accent); }
+.switch input:checked + i::after { transform: translateX(18px); }
+.switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+details { border-top: 1px solid var(--line); padding: 16px 0; }
+details:first-of-type { border-top: 0; padding-top: 0; }
+summary { font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: '+'; color: var(--muted); font-size: 20px; line-height: 1; }
+details[open] summary::after { content: '–'; }
+details p { color: var(--muted); margin-top: 10px; max-width: 70ch; }
+
+/* notifications popover */
+.pop {
+  position: absolute; right: 36px; top: 62px; width: 380px; max-width: calc(100vw - 24px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px -12px rgba(0,0,0,.25);
+  padding: 18px 20px; z-index: 40; display: none;
+}
+.pop.open { display: block; animation: panelIn .25s var(--ease); }
+
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 20px); opacity: 0;
+  background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  transition: all .3s var(--ease); z-index: 60; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.scrim { display: none; }
+
+.fee-box {
+  background: var(--warn-tint); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+}
+.fee-box .fee-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--warn); color: white; display: grid; place-items: center; flex: none; }
+.fee-box .fee-ico svg { width: 22px; height: 22px; }
+.fee-box .fee-info b { display: block; font-size: 14px; }
+.fee-box .fee-info span { font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: var(--warn); }
+
+.crypto-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+  background: var(--surface); display: flex; flex-direction: column; gap: 14px;
+}
+.crypto-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.crypto-row .lbl { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.crypto-row .val { font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; word-break: break-all; }
+.crypto-addr { background: var(--surface-2); padding: 12px 14px; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; letter-spacing: .02em; word-break: break-all; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.copy-btn { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.copy-btn:hover { color: var(--ink); border-color: var(--muted); }
+
+/* responsive */
+@media (max-width: 1080px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stat-hero { grid-column: 1 / -1; }
+  .cols, .flow { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; z-index: 50; left: 0; top: 0; width: 272px; transform: translateX(-100%); }
+  .sidebar.open { transform: none; }
+  .scrim.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 45; }
+  .menu-btn { display: grid; }
+  .topbar { padding: 12px 18px; }
+  .content { padding: 24px 18px 48px; }
+  .user-meta { display: none; }
+  .pop { right: 12px; left: 12px; width: auto; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .stats { grid-template-columns: 1fr; }
+  .stat .big { font-size: 34px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .page-head h2 { font-size: 23px; }
+  .card-pad { padding: 20px; }
+  .sum-row.emph { margin: 6px -20px -20px; padding: 16px 20px; }
+  .kv { grid-template-columns: 1fr; gap: 2px; }
+  .kv dd { margin-bottom: 10px; }
+  .opt-body { flex-wrap: wrap; }
+  .opt-fee { width: 100%; text-align: left; padding-left: 32px; }
+  .step { min-width: 108px; }
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tr { padding: 14px 18px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+  tr:last-child { border-bottom: 0; }
+  td { padding: 0; border: 0; text-align: left; }
+  td.right { text-align: right; }
+  td[data-l="Date"], td[data-l="Transaction ID"] { font-size: 12.5px; color: var(--muted); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">T</div>
+      <div class="brand-name">Tarn Wallet</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open navigation"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle light and dark theme"></button>
+      <button class="icon-btn" id="bellBtn" aria-label="Notifications" aria-expanded="false">
+        <svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+        <span class="badge-dot" id="bellDot" hidden></span>
+      </button>
+      <div class="user">
+        <div class="avatar" aria-hidden="true">IC</div>
+        <div class="user-meta"><b>Imani Calder</b><span>Personal wallet</span></div>
+      </div>
+    </header>
+
+    <div class="pop" id="pop" role="dialog" aria-label="Notifications">
+      <div class="card-head"><div class="card-title">Notifications</div><button class="link" data-act="readAll">Mark all as read</button></div>
+      <div id="popList"></div>
+    </div>
+
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  /* ---------- icons ---------- */
+  const P = {
+    grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    out: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+    in: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+    list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+    wallet: '<path d="M4 7a2 2 0 0 1 2-2h12v4"/><path d="M4 7v10a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2z"/><path d="M16 14h.01"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-5.5 8-5.5s6.5 1.5 8 5.5"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    fee: '<path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 9h6M9 13h4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+    crypto: '<circle cx="12" cy="12" r="9"/><path d="M9.5 8h4a2.5 2.5 0 0 1 0 5h-4M9.5 13h4.5a2.5 2.5 0 0 1 0 5H9.5M11 6v2M11 18v2"/>',
+    lock: '<rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    link: '<path d="M10 14a4 4 0 0 1 0-6l2-2a4 4 0 0 1 6 6l-1 1"/><path d="M14 10a4 4 0 0 1 0 6l-2 2a4 4 0 0 1-6-6l1-1"/>',
+    trash: '<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>'
+  };
+  const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+
+  /* ---------- persistence ---------- */
+  const STORAGE_KEY = 'tarnwallet.v2';
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        balance: state.balance,
+        pending: state.pending,
+        withdrawn: state.withdrawn,
+        tx: state.tx,
+        notes: state.notes,
+        linkedAccounts: state.linkedAccounts,
+        theme: document.documentElement.dataset.theme || 'light'
+      }));
+    } catch (e) {}
+  }
+
+  /* ---------- data ---------- */
+  const money = n => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const METHODS = {
+    bank: { name: 'Bank transfer', eta: '1–2 business days', note: '5% fee, minimum $25.00', pct: 0.05, min: 25 },
+    card: { name: 'Debit card payout', eta: 'Usually within 30 minutes', note: '5.5% fee, minimum $30.00', pct: 0.055, min: 30 },
+    wire: { name: 'Wire transfer', eta: 'Same business day', note: 'Flat $150.00 fee', flat: 150 }
+  };
+  const feeFor = (m, amt) => {
+    const x = METHODS[m];
+    if (x.flat != null) return x.flat;
+    return Math.round(Math.max(x.min, amt * x.pct) * 100) / 100;
+  };
+  const MIN_WITHDRAW = 100;
+
+  const FEE_CRYPTO = {
+    network: 'USDT · TRC-20 (Tron)',
+    address: 'TQn9Y2kM7rX4vB8pL3wR6sD1fG5hJ2cA',
+    confirmations: 20,
+    windowHours: 24
+  };
+
+  const DEFAULT_TX = [
+    { date: 'Oct 1, 2026', type: 'Deposit', note: 'Client payment · Meridian Consulting', amount: 18500.00, status: 'Completed', id: 'DEP-91001' },
+    { date: 'Sep 25, 2026', type: 'Deposit', note: 'Contract milestone · Northwind Labs', amount: 12750.00, status: 'Completed', id: 'DEP-90877' },
+    { date: 'Sep 18, 2026', type: 'Deposit', note: 'Invoice #2241 · Brightpath Media', amount: 9400.00, status: 'Completed', id: 'DEP-90712' },
+    { date: 'Sep 12, 2026', type: 'Deposit', note: 'Retainer · Alder & Finch', amount: 8200.00, status: 'Completed', id: 'DEP-90605' },
+    { date: 'Sep 5, 2026', type: 'Deposit', note: 'Project payout · Veridian Group', amount: 6350.00, status: 'Completed', id: 'DEP-90488' },
+    { date: 'Aug 28, 2026', type: 'Deposit', note: 'Invoice #2198 · Northwind Labs', amount: 4800.00, status: 'Completed', id: 'DEP-90331' }
+  ];
+  const DEFAULT_NOTES = [
+    { key: 'deposit1', title: 'Deposit received', body: '$18,500.00 from Meridian Consulting has landed in your wallet.', time: 'Oct 1, 2026', unread: true },
+    { key: 'deposit2', title: 'Deposit received', body: '$12,750.00 from Northwind Labs has landed in your wallet.', time: 'Sep 25, 2026', unread: true },
+    { key: 'deposit3', title: 'Deposit received', body: '$9,400.00 from Brightpath Media has landed in your wallet.', time: 'Sep 18, 2026', unread: false },
+    { key: 'deposit4', title: 'Deposit received', body: '$8,200.00 from Alder & Finch has landed in your wallet.', time: 'Sep 12, 2026', unread: false },
+    { key: 'deposit5', title: 'Deposit received', body: '$6,350.00 from Veridian Group has landed in your wallet.', time: 'Sep 5, 2026', unread: false },
+    { key: 'welcome', title: 'Welcome to Tarn Wallet', body: 'Your account is ready. Deposits are instant and withdrawals are fast.', time: 'Aug 20, 2026', unread: false }
+  ];
+
+  const persisted = loadState();
+
+  const state = {
+    view: 'dashboard',
+    balance: persisted?.balance ?? 60000.00,
+    pending: persisted?.pending ?? 0,
+    withdrawn: persisted?.withdrawn ?? 0,
+    txFilter: 'All',
+    tx: persisted?.tx ?? JSON.parse(JSON.stringify(DEFAULT_TX)),
+    notes: persisted?.notes ?? JSON.parse(JSON.stringify(DEFAULT_NOTES)),
+    linkedAccounts: persisted?.linkedAccounts ?? [],
+    flow: null,
+    linkForm: { open: false, holder: '', institution: '', account: '', type: 'bank', errors: {} }
+  };
+  const newFlow = () => ({
+    step: 1, amount: '', method: 'bank',
+    holder: '', institution: '', account: '', useLinkedId: '',
+    feeMethod: 'crypto',
+    cryptoRef: '', agreed: false,
+    paying: false, txId: null, done: false, noted: false,
+    feeDeadline: null, errors: {}
+  });
+
+  const today = () => new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const $ = s => document.querySelector(s);
+  const NAV = [
+    ['dashboard', 'Dashboard', 'grid'], ['withdraw', 'Withdraw', 'out'], ['transactions', 'Transactions', 'list'],
+    ['wallet', 'Wallet', 'wallet'], ['profile', 'Profile', 'user'], ['settings', 'Settings', 'gear'], ['help', 'Help & Support', 'help']
+  ];
+  const TITLES = Object.fromEntries(NAV.map(n => [n[0], n[1]]));
+
+  /* ---------- shared pieces ---------- */
+  const pill = s => `<span class="pill ${s === 'Completed' ? 'ok' : s === 'Pending' ? 'pending' : 'bad'}">${s}</span>`;
+  const txIcon = t => t === 'Deposit' ? 'in' : t === 'Fee' ? 'fee' : 'out';
+
+  function noteList(n) {
+    if (!state.notes.length) return `<div class="empty">No notifications yet</div>`;
+    return state.notes.slice(0, n).map(x => `
+      <div class="note ${x.unread ? 'unread' : ''}"><i></i><div><b>${x.title}</b><p>${x.body}</p><time>${x.time}</time></div></div>`).join('');
+  }
+  function addNote(key, title, body) {
+    state.notes.unshift({ key, title, body, time: today(), unread: true });
+    saveState();
+  }
+
+  /* ---------- views ---------- */
+  function dashboardView() {
+    const recent = state.tx.length
+      ? state.tx.slice(0, 5).map(t => `
+        <div class="row">
+          <div class="ico">${icon(txIcon(t.type))}</div>
+          <div class="row-main"><b>${t.type}</b><span>${t.note} · ${t.date}</span></div>
+          <div class="row-amt num ${t.amount > 0 ? 'amt-in' : ''}">${t.amount > 0 ? '+' : '−'}${money(Math.abs(t.amount))}<span>${t.status}</span></div>
+        </div>`).join('')
+      : `<div class="empty">No transactions yet</div>`;
+    return `
+    <div class="page-head"><h2>Good afternoon, Imani</h2><p>Here is where your wallet stands today.</p></div>
+    <section class="stats" aria-label="Balances">
+      <div class="card stat stat-hero">
+        <div class="hero-row">
+          <div><div class="label">Available balance</div><div class="big num">${money(state.balance)}</div><div class="sub">Ready to withdraw</div></div>
+          <button class="btn primary" data-act="startWithdraw">${icon('out')} Withdraw funds</button>
+        </div>
+      </div>
+      <div class="card stat"><div class="label">Pending withdrawals</div><div class="mid num">${money(state.pending)}</div><div class="sub">${state.pending ? 'Awaiting review' : 'Nothing pending'}</div></div>
+      <div class="card stat"><div class="label">Total withdrawn</div><div class="mid num">${money(state.withdrawn)}</div><div class="sub">All time</div></div>
+    </section>
+    <div class="cols">
+      <section class="card card-pad">
+        <div class="card-head"><div class="card-title">Recent transactions</div><button class="link" data-view="transactions">View all</button></div>
+        <div class="rows">${recent}</div>
+      </section>
+      <section class="card card-pad">
+        <div class="card-head"><div class="card-title">Notifications</div><button class="link" data-act="readAll">Mark all as read</button></div>
+        ${noteList(4)}
+      </section>
+    </div>`;
+  }
+
+  function stepper(cur) {
+    const labels = ['Dashboard', 'Enter amount', 'Review withdrawal', 'Fee', 'Send fee', 'Status'];
+    return `<ol class="stepper" aria-label="Withdrawal progress">${labels.map((l, i) =>
+      `<li class="step ${i < cur ? 'done' : i === cur ? 'current' : ''}" ${i === cur ? 'aria-current="step"' : ''}><div class="step-bar"></div><span>${l}</span></li>`).join('')}</ol>`;
+  }
+
+  function sideSummary(f, showFee) {
+    const amt = parseFloat(f.amount) || 0;
+    const m = METHODS[f.method];
+    const holder = f.holder ? f.holder : '—';
+    const inst = f.institution ? f.institution : '—';
+    return `
+    <aside class="card card-pad summary" aria-label="Withdrawal summary">
+      <div class="card-title" style="margin-bottom:16px">Summary</div>
+      <div class="sum-row"><span>Available balance</span><b class="num">${money(state.balance)}</b></div>
+      <div class="sum-row"><span>Withdrawal amount</span><b class="num" id="sAmt">${amt ? money(amt) : '—'}</b></div>
+      <div class="sum-row"><span>Method</span><b id="sMethod">${m.name}</b></div>
+      <div class="sum-row"><span>Estimated arrival</span><b id="sEta">${m.eta}</b></div>
+      <div class="sum-row"><span>Account holder</span><b id="sHolder">${holder}</b></div>
+      <div class="sum-row"><span>Institution</span><b id="sInst">${inst}</b></div>
+      <div class="sum-row"><span>Fee</span><b class="num" id="sFee">${showFee && amt ? money(feeFor(f.method, amt)) : '—'}</b></div>
+    </aside>`;
+  }
+
+  function withdrawView() {
+    if (!state.flow) state.flow = newFlow();
+    const f = state.flow, e = f.errors;
+    const amt = parseFloat(f.amount) || 0;
+    let body = '';
+
+    /* STEP 1 */
+    if (f.step === 1) {
+      const linked = state.linkedAccounts;
+      const hasLinked = linked.length > 0;
+      const usingLinked = hasLinked && f.useLinkedId;
+      body = `
+      <div class="flow panel-in">
+        <form class="card card-pad stack" id="amountForm" novalidate>
+          <div class="field">
+            <label for="amt">Amount to withdraw</label>
+            <div class="amount-wrap"><span aria-hidden="true">$</span><input class="input num ${e.amount ? 'err' : ''}" id="amt" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${f.amount}" aria-describedby="amtHint amtErr"></div>
+            <div class="hint" id="amtHint">Available: <b class="num">${money(state.balance)}</b> · Minimum ${money(MIN_WITHDRAW)}</div>
+            <div class="err-text" id="amtErr" role="alert">${e.amount || ''}</div>
+          </div>
+          <div class="field">
+            <div class="lab" id="mlab">Withdrawal method</div>
+            <div class="opts" role="radiogroup" aria-labelledby="mlab">
+              ${Object.entries(METHODS).map(([k, m]) => `
+              <label class="opt"><input type="radio" name="method" value="${k}" ${f.method === k ? 'checked' : ''}>
+                <div class="opt-body"><span class="radio-dot"></span><div class="opt-text"><b>${m.name}</b><span>${m.eta}</span></div><div class="opt-fee">${m.note}</div></div></label>`).join('')}
+            </div>
+          </div>
+          <div class="divider"></div>
+
+          ${hasLinked ? `
+          <div class="field">
+            <div class="lab">Send to a saved account?</div>
+            <div class="opts" role="radiogroup" aria-label="Saved accounts">
+              <label class="opt"><input type="radio" name="useLinked" value="" ${!usingLinked ? 'checked' : ''}>
+                <div class="opt-body"><span class="radio-dot"></span><div class="opt-text"><b>Enter new account details</b><span>Fill in the account you want to send to</span></div></div></label>
+              ${linked.map(a => `
+              <label class="opt"><input type="radio" name="useLinked" value="${a.id}" ${f.useLinkedId === a.id ? 'checked' : ''}>
+                <div class="opt-body"><span class="radio-dot"></span><div class="opt-text"><b>${a.institution}</b><span>${a.holder} · •••• ${a.account.slice(-4)}</span></div><div class="opt-fee"><span class="ext-tag">${a.type === 'bank' ? 'Bank' : 'Card'}</span></div></div></label>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <div class="form-grid">
+            <div class="field full"><div class="card-title">Where should we send the money?</div></div>
+            <div class="field"><label for="holder">Account holder</label><input class="input ${e.holder ? 'err' : ''}" id="holder" value="${usingLinked ? linked.find(a=>a.id===f.useLinkedId)?.holder || '' : f.holder}" placeholder="Full name on the account" autocomplete="off" ${usingLinked ? 'readonly' : ''}><div class="err-text">${e.holder || ''}</div></div>
+            <div class="field"><label for="inst">Institution</label><input class="input ${e.institution ? 'err' : ''}" id="inst" value="${usingLinked ? linked.find(a=>a.id===f.useLinkedId)?.institution || '' : f.institution}" placeholder="Bank or card provider" autocomplete="off" ${usingLinked ? 'readonly' : ''}><div class="err-text">${e.institution || ''}</div></div>
+            <div class="field full"><label for="acct">Account number</label><input class="input num ${e.account ? 'err' : ''}" id="acct" value="${usingLinked ? linked.find(a=>a.id===f.useLinkedId)?.account || '' : f.account}" placeholder="Enter your account number" inputmode="numeric" autocomplete="off" ${usingLinked ? 'readonly' : ''}><div class="err-text">${e.account || ''}</div></div>
+          </div>
+
+          <div class="actions" style="margin-top:0"><button type="button" class="btn ghost" data-act="cancelFlow">Cancel</button><button type="submit" class="btn primary">Next</button></div>
+        </form>
+        ${sideSummary(f, false)}
+      </div>`;
+    }
+
+    /* STEP 2 — review */
+    if (f.step === 2) {
+      const m = METHODS[f.method];
+      body = `
+      <div class="flow panel-in">
+        <section class="card card-pad">
+          <div class="card-head"><div class="card-title">Review withdrawal</div><button class="link" data-act="editStep">Edit</button></div>
+          <dl class="kv">
+            <dt>Amount</dt><dd class="num">${money(amt)}</dd>
+            <dt>Method</dt><dd>${m.name}</dd>
+            <dt>Estimated arrival</dt><dd>${m.eta}</dd>
+            <dt>Account holder</dt><dd>${f.holder}</dd>
+            <dt>Institution</dt><dd>${f.institution}</dd>
+            <dt>Account number</dt><dd class="num">•••• ${f.account.replace(/\D/g, '').slice(-4) || '----'}</dd>
+          </dl>
+          <div class="actions"><button class="btn ghost" data-act="editStep">Back</button><button class="btn primary" data-act="toFee">Next</button></div>
+        </section>
+        ${sideSummary(f, false)}
+      </div>`;
+    }
+
+    /* STEP 3 — fee */
+    if (f.step === 3) {
+      const fee = feeFor(f.method, amt);
+      body = `
+      <div class="flow panel-in">
+        <section class="card card-pad stack">
+          <div><div class="card-title">Fee</div></div>
+          <div class="fee-box">
+            <div class="fee-ico">${icon('fee')}</div>
+            <div class="fee-info"><b>Fee</b><span>${money(fee)}</span></div>
+          </div>
+          <dl class="kv">
+            <dt>Withdrawal amount</dt><dd class="num">${money(amt)}</dd>
+            <dt>Fee</dt><dd class="num">${money(fee)}</dd>
+            <dt>From your wallet balance</dt><dd class="num">$0.00</dd>
+            <dt>You will receive</dt><dd class="num"><b>${money(amt)}</b></dd>
+          </dl>
+          <div class="notice">${icon('info')}<div>If the withdrawal is declined, the fee is returned to the sending wallet.</div></div>
+          <div class="actions" style="margin-top:0"><button class="btn ghost" data-act="back">Back</button><div class="right"><button class="btn" data-act="cancelFlow">Cancel</button><button class="btn primary" data-act="toPay">Next</button></div></div>
+        </section>
+        ${sideSummary(f, true)}
+      </div>`;
+    }
+
+    /* STEP 4 — send fee (crypto only) */
+    if (f.step === 4) {
+      const fee = feeFor(f.method, amt);
+      const cryptoAmt = fee.toFixed(2);
+      const deadline = f.feeDeadline || new Date(Date.now() + FEE_CRYPTO.windowHours * 3600 * 1000).toISOString();
+      if (!f.feeDeadline) f.feeDeadline = deadline;
+      const deadlineStr = new Date(deadline).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      body = `
+      <div class="flow panel-in">
+        <section class="card card-pad stack">
+          <div><div class="card-title">Send fee</div></div>
+
+          <div class="crypto-card">
+            <div class="crypto-row"><span class="lbl">Amount</span><span class="val">${cryptoAmt} USDT</span></div>
+            <div class="crypto-row"><span class="lbl">Network</span><span class="val">${FEE_CRYPTO.network}</span></div>
+            <div>
+              <div class="crypto-row" style="margin-bottom:6px"><span class="lbl">Address</span></div>
+              <div class="crypto-addr">
+                <span id="feeAddr">${FEE_CRYPTO.address}</span>
+                <button type="button" class="copy-btn" data-act="copyFeeAddr">Copy</button>
+              </div>
+            </div>
+            <div class="crypto-row"><span class="lbl">Confirmations</span><span class="val">${FEE_CRYPTO.confirmations}</span></div>
+            <div class="crypto-row"><span class="lbl">Expires</span><span class="val">${deadlineStr}</span></div>
+          </div>
+
+          <div class="field">
+            <label for="cryptoRef">Transaction hash</label>
+            <input class="input" id="cryptoRef" placeholder="TXID" value="${f.cryptoRef || ''}">
+          </div>
+
+          <label class="check"><input type="checkbox" id="agreed" ${f.agreed ? 'checked' : ''}><span>I agree to the fee policy.</span></label>
+          <div class="err-text" role="alert">${e.agreed || ''}</div>
+
+          <div class="actions" style="margin-top:0">
+            <button class="btn ghost" data-act="back" ${f.paying ? 'disabled' : ''}>Back</button>
+            <div class="right">
+              <button class="btn" data-act="cancelFlow" ${f.paying ? 'disabled' : ''}>Cancel</button>
+              <button class="btn primary" data-act="pay" ${f.paying ? 'disabled' : ''}>${f.paying ? 'Processing…' : 'Proceed'}</button>
+            </div>
+          </div>
+        </section>
+        <aside class="card card-pad summary" aria-label="Fee breakdown">
+          <div class="card-title" style="margin-bottom:16px">Breakdown</div>
+          <div class="sum-row"><span>Withdrawal amount</span><b class="num">${money(amt)}</b></div>
+          <div class="sum-row"><span>Fee</span><b class="num">${money(fee)}</b></div>
+          <div class="sum-row total"><span>From your wallet</span><b class="num">$0.00</b></div>
+          <div class="sum-row emph"><span style="color:var(--ink);font-weight:600">You will receive</span><b class="num">${money(amt)}</b></div>
+        </aside>
+      </div>`;
+    }
+
+    /* STEP 5 — status */
+    if (f.step === 5) {
+      const fee = feeFor(f.method, amt);
+      const steps = [
+        ['Withdrawal submitted', 'Request received'],
+        ['Fee sent', money(fee) + ' · ' + FEE_CRYPTO.network],
+        ['Confirming on-chain', 'Awaiting ' + FEE_CRYPTO.confirmations + ' confirmations'],
+        ['Funds sent', money(amt) + ' to ' + f.institution]
+      ];
+      const cur = f.done ? 4 : 2;
+      body = `
+      <div class="flow panel-in">
+        <section class="card card-pad">
+          <div class="status-head"><div class="status-icon">${icon('check')}</div><div><div class="card-title" style="font-size:18px">${f.done ? 'Withdrawal completed' : 'Withdrawal in progress'}</div><div class="mono">Reference ${f.txId}</div></div></div>
+          <ol class="timeline">${steps.map((s, i) => `<li class="tl ${i < cur ? 'done' : i === cur ? 'current' : ''}"><div class="dot">${i < cur ? icon('check').replace('class="i"', 'class="i" style="width:12px;height:12px;stroke-width:3"') : ''}</div><div><b>${s[0]}</b><span>${s[1]}</span></div></li>`).join('')}</ol>
+          <div class="actions"><button class="btn primary" data-act="finish">Back to dashboard</button>${f.done ? '' : '<button class="btn ghost" data-act="simDone">Mark as completed</button>'}</div>
+        </section>
+        <aside class="card card-pad summary" aria-label="Receipt">
+          <div class="card-title" style="margin-bottom:16px">Receipt</div>
+          <div class="sum-row"><span>Withdrawal amount</span><b class="num">${money(amt)}</b></div>
+          <div class="sum-row"><span>Fee</span><b class="num">${money(fee)}</b></div>
+          <div class="sum-row"><span>Network</span><b>${FEE_CRYPTO.network}</b></div>
+          <div class="sum-row"><span>Wallet balance untouched</span><b class="num">${money(state.balance)}</b></div>
+          <div class="sum-row emph"><span style="color:var(--ink);font-weight:600">You will receive</span><b class="num">${money(amt)}</b></div>
+        </aside>
+      </div>`;
+    }
+
+    return `
+    <div class="page-head"><h2>Withdraw funds</h2><p>Move money from your Tarn wallet to an account you own.</p></div>
+    ${stepper(f.step)}${body}`;
+  }
+
+  function transactionsView() {
+    const filters = ['All', 'Deposit', 'Withdrawal', 'Fee'];
+    const list = state.tx.filter(t => state.txFilter === 'All' || t.type === state.txFilter);
+    const tableBody = list.length
+      ? list.map(t => `<tr>
+        <td data-l="Date">${t.date}</td>
+        <td data-l="Type"><b style="font-weight:600">${t.type}</b><div class="mono">${t.note}</div></td>
+        <td data-l="Amount" class="right num ${t.amount > 0 ? 'amt-in' : ''}" style="font-weight:600">${t.amount > 0 ? '+' : '−'}${money(Math.abs(t.amount))}</td>
+        <td data-l="Status">${pill(t.status)}</td>
+        <td data-l="Transaction ID" class="mono">${t.id}</td></tr>`).join('')
+      : `<tr><td colspan="5"><div class="empty">No transactions yet</div></td></tr>`;
+    return `
+    <div class="page-head"><h2>Transactions</h2><p>Every deposit, withdrawal and fee on your wallet.</p></div>
+    <div class="toolbar" role="group" aria-label="Filter by type">${filters.map(x => `<button class="chip" data-filter="${x}" aria-pressed="${state.txFilter === x}">${x === 'All' ? 'All' : x + 's'}</button>`).join('')}</div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Date</th><th>Transaction type</th><th class="right">Amount</th><th>Status</th><th>Transaction ID</th></tr></thead>
+      <tbody>${tableBody}</tbody>
+    </table></div>`;
+  }
+
+  function walletView() {
+    const linked = state.linkedAccounts;
+    const linkForm = state.linkForm;
+    const accountsBlock = linked.length
+      ? `<div class="rows">
+          ${linked.map(a => `
+            <div class="row">
+              <div class="ico">${icon(a.type === 'bank' ? 'bank' : 'card')}</div>
+              <div class="row-main"><b>${a.institution}</b><span>${a.holder} · •••• ${a.account.slice(-4)}</span></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="pill ok">Linked</span>
+                <button class="icon-btn" data-act="removeLinked" data-id="${a.id}" aria-label="Remove account" style="width:32px;height:32px;border-radius:8px">${icon('trash')}</button>
+              </div>
+            </div>`).join('')}
+        </div>`
+      : `<div class="empty-card">
+          <div class="ico-wrap">${icon('link')}</div>
+          <b>No accounts linked yet</b>
+          <p>Link a bank account or card so you can withdraw without re-entering your details each time.</p>
+          <button class="btn primary" data-act="openLinkForm">${icon('plus')} Link an account</button>
+        </div>`;
+
+    const formBlock = linkForm.open ? `
+      <form class="stack" id="linkForm" style="margin-top:20px;border-top:1px solid var(--line);padding-top:20px">
+        <div class="card-title">Link a new account</div>
+        <div class="field">
+          <div class="lab" id="ltlab">Account type</div>
+          <div class="opts" role="radiogroup" aria-labelledby="ltlab">
+            <label class="opt"><input type="radio" name="linkType" value="bank" ${linkForm.type === 'bank' ? 'checked' : ''}>
+              <div class="opt-body"><span class="radio-dot"></span><div class="opt-text"><b>Bank account</b><span>ACH / wire / local transfer</span></div></div></label>
+            <label class="opt"><input type="radio" name="linkType" value="card" ${linkForm.type === 'card' ? 'checked' : ''}>
+              <div class="opt-body"><span class="radio-dot"></span><div class="opt-text"><b>Debit card</b><span>Faster payouts</span></div></div></label>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label for="lHolder">Account holder</label><input class="input ${linkForm.errors.holder ? 'err' : ''}" id="lHolder" value="${linkForm.holder}" placeholder="Full name on the account" autocomplete="off"><div class="err-text">${linkForm.errors.holder || ''}</div></div>
+          <div class="field"><label for="lInst">Institution</label><input class="input ${linkForm.errors.institution ? 'err' : ''}" id="lInst" value="${linkForm.institution}" placeholder="Bank or card provider" autocomplete="off"><div class="err-text">${linkForm.errors.institution || ''}</div></div>
+          <div class="field full"><label for="lAcct">Account number</label><input class="input num ${linkForm.errors.account ? 'err' : ''}" id="lAcct" value="${linkForm.account}" placeholder="Enter your account number" inputmode="numeric" autocomplete="off"><div class="err-text">${linkForm.errors.account || ''}</div></div>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button type="button" class="btn ghost" data-act="closeLinkForm">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
+      </form>` : '';
+
+    return `
+    <div class="page-head"><h2>Wallet</h2><p>Your balance and the accounts you've linked for payouts.</p></div>
+    <div class="grid-2">
+      <section class="card card-pad"><div class="card-title" style="margin-bottom:16px">Balance breakdown</div>
+        <div class="summary">
+          <div class="sum-row"><span>Available</span><b class="num">${money(state.balance)}</b></div>
+          <div class="sum-row"><span>Pending withdrawals</span><b class="num">${money(state.pending)}</b></div>
+          <div class="sum-row total"><span>Total in wallet</span><b class="num">${money(state.balance + state.pending)}</b></div>
+        </div>
+      </section>
+      <section class="card card-pad">
+        <div class="card-head" style="margin-bottom:8px">
+          <div class="card-title">Linked accounts</div>
+          ${linked.length ? `<button class="link" data-act="openLinkForm">${linkForm.open ? 'Close' : 'Link another'}</button>` : ''}
+        </div>
+        ${accountsBlock}
+        ${formBlock}
+      </section>
+    </div>`;
+  }
+
+  function profileView() {
+    return `
+    <div class="page-head"><h2>Profile</h2><p>Details we hold for your account.</p></div>
+    <section class="card card-pad" style="max-width:640px"><dl class="kv">
+      <dt>Name</dt><dd>Imani Calder</dd><dt>Email</dt><dd>imani@example.test</dd><dt>Account type</dt><dd>Personal wallet</dd>
+      <dt>Member since</dt><dd>January 2025</dd><dt>Identity check</dt><dd><span class="pill ok">Verified</span></dd></dl></section>`;
+  }
+
+  function settingsView() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    return `
+    <div class="page-head"><h2>Settings</h2><p>Appearance and notification preferences.</p></div>
+    <section class="card card-pad" style="max-width:640px">
+      <div class="toggle-row"><div><b>Dark appearance</b><span>Switch between light and dark themes.</span></div><label class="switch"><input type="checkbox" id="darkSw" ${dark ? 'checked' : ''} aria-label="Dark appearance"><i></i></label></div>
+      <div class="toggle-row"><div><b>Withdrawal updates</b><span>Get notified when a withdrawal changes status.</span></div><label class="switch"><input type="checkbox" checked aria-label="Withdrawal updates"><i></i></label></div>
+      <div class="toggle-row"><div><b>Fee reminders</b><span>Notify me when a fee needs to be sent.</span></div><label class="switch"><input type="checkbox" checked aria-label="Fee reminders"><i></i></label></div>
+    </section>`;
+  }
+
+  function helpView() {
+    return `
+    <div class="page-head"><h2>Help &amp; Support</h2><p>Answers to common questions about withdrawals and fees.</p></div>
+    <section class="card card-pad" style="max-width:720px">
+      <details open><summary>When do I see the withdrawal fee?</summary><p>After you review the withdrawal. A dedicated fee screen shows the amount before you proceed.</p></details>
+      <details><summary>How is the fee paid?</summary><p>Fees are paid in USDT on the TRC-20 network to the address shown on the fee screen. Your wallet balance is never used for the fee.</p></details>
+      <details><summary>Why is there a processing fee?</summary><p>The fee covers payout costs for the method you choose. Bank transfers are 5% (minimum $25.00), debit card payouts are 5.5% (minimum $30.00), and wire transfers are a flat $150.00.</p></details>
+      <details><summary>What if my withdrawal is declined?</summary><p>The fee is returned to the sending crypto wallet, and the declined request appears in your transaction history.</p></details>
+      <details><summary>How do I link an account?</summary><p>Go to the <b>Wallet</b> page and use "Link an account". Once saved, it appears as an option during withdrawals.</p></details>
+    </section>`;
+  }
+
+  const VIEWS = { dashboard: dashboardView, withdraw: withdrawView, transactions: transactionsView, wallet: walletView, profile: profileView, settings: settingsView, help: helpView };
+
+  /* ---------- render ---------- */
+  function render(focus) {
+    $('#view').innerHTML = VIEWS[state.view]();
+    $('#pageTitle').textContent = TITLES[state.view];
+    $('#nav').innerHTML = NAV.map(([k, l, ic], i) =>
+      (i === 4 ? '<div class="nav-sep"></div>' : '') +
+      `<button data-view="${k}" ${state.view === k ? 'aria-current="page"' : ''}>${icon(ic)}${l}</button>`).join('');
+    const unread = state.notes.some(n => n.unread);
+    $('#bellDot').hidden = !unread;
+    $('#popList').innerHTML = noteList(6);
+    bindWithdraw();
+    bindLinkForm();
+    if (focus) { window.scrollTo({ top: 0 }); $('#view').focus({ preventScroll: true }); }
+  }
+
+  function bindWithdraw() {
+    const f = state.flow;
+    if (state.view !== 'withdraw' || !f || f.step !== 1) return;
+    const amt = $('#amt');
+    if (!amt) return;
+    const sync = () => {
+      const raw = amt.value.replace(/[^0-9.]/g, '');
+      const v = parseFloat(raw) || 0;
+      const m = $('input[name=method]:checked')?.value || f.method;
+      if ($('#sAmt')) $('#sAmt').textContent = v ? money(v) : '—';
+      if ($('#sMethod')) $('#sMethod').textContent = METHODS[m].name;
+      if ($('#sEta')) $('#sEta').textContent = METHODS[m].eta;
+      const h = $('#holder')?.value.trim();
+      const inst = $('#inst')?.value.trim();
+      if ($('#sHolder')) $('#sHolder').textContent = h || '—';
+      if ($('#sInst')) $('#sInst').textContent = inst || '—';
+    };
+    amt.addEventListener('input', sync);
+    $('#holder')?.addEventListener('input', sync);
+    $('#inst')?.addEventListener('input', sync);
+    document.querySelectorAll('input[name=method]').forEach(r => r.addEventListener('change', sync));
+    document.querySelectorAll('input[name=useLinked]').forEach(r => r.addEventListener('change', ev => {
+      f.useLinkedId = ev.target.value;
+      const a = state.linkedAccounts.find(x => x.id === f.useLinkedId);
+      if (a) {
+        $('#holder').value = a.holder;
+        $('#inst').value = a.institution;
+        $('#acct').value = a.account;
+        $('#holder').readOnly = true; $('#inst').readOnly = true; $('#acct').readOnly = true;
+      } else {
+        $('#holder').readOnly = false; $('#inst').readOnly = false; $('#acct').readOnly = false;
+      }
+      sync();
+    }));
+    $('#amountForm')?.addEventListener('submit', ev => { ev.preventDefault(); submitAmount(); });
+  }
+
+  function bindLinkForm() {
+    const lf = state.linkForm;
+    if (state.view !== 'wallet' || !lf.open) return;
+    document.querySelectorAll('input[name=linkType]').forEach(r => r.addEventListener('change', ev => {
+      lf.type = ev.target.value;
+    }));
+    $('#linkForm')?.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const err = {};
+      lf.holder = $('#lHolder').value.trim();
+      lf.institution = $('#lInst').value.trim();
+      lf.account = $('#lAcct').value.trim();
+      if (!lf.holder) err.holder = 'Enter the account holder name.';
+      if (!lf.institution) err.institution = 'Enter the institution name.';
+      if (lf.account.replace(/\D/g, '').length < 6) err.account = 'Enter at least 6 digits.';
+      lf.errors = err;
+      if (Object.keys(err).length) { render(); return; }
+      state.linkedAccounts.push({
+        id: 'acct_' + Date.now(),
+        type: lf.type, holder: lf.holder, institution: lf.institution, account: lf.account
+      });
+      state.linkForm = { open: false, holder: '', institution: '', account: '', type: 'bank', errors: {} };
+      addNote('linked', 'Account linked', `${lf.institution} · •••• ${lf.account.slice(-4)} is now available for withdrawals.`);
+      saveState();
+      render();
+      toast('Account linked');
+    });
+  }
+
+  function submitAmount() {
+    const f = state.flow, err = {};
+    const raw = $('#amt').value.replace(/[^0-9.]/g, '');
+    const v = Math.round(parseFloat(raw) * 100) / 100;
+    f.amount = raw; f.method = $('input[name=method]:checked').value;
+    f.holder = $('#holder').value.trim(); f.institution = $('#inst').value.trim(); f.account = $('#acct').value.trim();
+    if (!v || isNaN(v)) err.amount = 'Enter the amount you want to withdraw.';
+    else if (v < MIN_WITHDRAW) err.amount = `The minimum withdrawal is ${money(MIN_WITHDRAW)}.`;
+    else if (v > state.balance) err.amount = `This is more than your available balance of ${money(state.balance)}.`;
+    if (!f.holder) err.holder = 'Enter the account holder name.';
+    if (!f.institution) err.institution = 'Enter the institution name.';
+    if (f.account.replace(/\D/g, '').length < 6) err.account = 'Enter at least 6 digits.';
+    f.errors = err;
+    if (!err.amount && !err.holder && !err.institution && !err.account) f.step = 2;
+    render(true);
+  }
+
+  function validateFeeStep() {
+    const f = state.flow, err = {};
+    f.cryptoRef = $('#cryptoRef')?.value.trim() || '';
+    f.agreed = $('#agreed')?.checked || false;
+    if (!f.agreed) err.agreed = 'Please agree to the fee policy.';
+    f.errors = err;
+    return Object.keys(err).length === 0;
+  }
+
+  /* ---------- actions ---------- */
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+  function go(v) {
+    if (v === 'withdraw' && (!state.flow || state.flow.done)) state.flow = newFlow();
+    state.view = v; closeNav(); closePop(); render(true);
+  }
+  function closeNav() { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('open'); }
+  function closePop() { $('#pop').classList.remove('open'); $('#bellBtn').setAttribute('aria-expanded', 'false'); }
+
+  const ACT = {
+    startWithdraw() { state.flow = newFlow(); go('withdraw'); },
+    cancelFlow() { state.flow = null; state.view = 'dashboard'; render(true); toast('Withdrawal cancelled.'); },
+    editStep() { state.flow.step = 1; render(true); },
+    toFee() {
+      const f = state.flow; f.step = 3;
+      if (!f.noted) {
+        f.noted = true;
+        addNote('fee', 'Fee', `${money(feeFor(f.method, parseFloat(f.amount)))} for your ${money(parseFloat(f.amount))} withdrawal.`);
+      }
+      render(true);
+    },
+    back() { state.flow.step = Math.max(1, state.flow.step - 1); render(true); },
+    toPay() { state.flow.step = 4; render(true); },
+    copyFeeAddr() {
+      const a = document.getElementById('feeAddr')?.textContent || FEE_CRYPTO.address;
+      navigator.clipboard?.writeText(a).then(() => toast('Address copied'), () => toast('Copy failed'));
+    },
+    pay() {
+      const f = state.flow;
+      if (!validateFeeStep()) { render(); return; }
+      f.errors = {}; f.paying = true; render();
+      setTimeout(() => {
+        const amt = Math.round(parseFloat(f.amount) * 100) / 100, fee = feeFor(f.method, amt);
+        const id = String(Math.floor(10000 + Math.random() * 89999));
+        f.txId = 'WDR-' + id; f.paying = false; f.step = 5;
+        state.pending = Math.round((state.pending + amt) * 100) / 100;
+        state.tx.unshift({ date: today(), type: 'Fee', note: 'Withdrawal fee · ' + FEE_CRYPTO.network, amount: -fee, status: 'Completed', id: 'FEE-' + id });
+        state.tx.unshift({ date: today(), type: 'Withdrawal', note: METHODS[f.method].name, amount: -amt, status: 'Pending', id: f.txId });
+        addNote('fee-sent', 'Fee sent', `${money(fee)} sent on ${FEE_CRYPTO.network}.`);
+        addNote('pending', 'Withdrawal pending', `${f.txId} is under review.`);
+        saveState();
+        render(true);
+      }, 1200);
+    },
+    simDone() {
+      const f = state.flow, amt = parseFloat(f.amount);
+      f.done = true;
+      state.pending = Math.max(0, Math.round((state.pending - amt) * 100) / 100);
+      state.withdrawn = Math.round((state.withdrawn + amt) * 100) / 100;
+      state.balance = Math.round((state.balance - amt) * 100) / 100;
+      const t = state.tx.find(x => x.id === f.txId); if (t) t.status = 'Completed';
+      addNote('completed', 'Withdrawal completed', `${money(amt)} was sent (${f.txId}).`);
+      saveState();
+      render(true);
+    },
+    finish() { state.flow = null; go('dashboard'); },
+    readAll() { state.notes.forEach(n => n.unread = false); saveState(); render(); },
+    openLinkForm() { state.linkForm.open = true; state.linkForm.errors = {}; render(); },
+    closeLinkForm() { state.linkForm = { open: false, holder: '', institution: '', account: '', type: 'bank', errors: {} }; render(); },
+    removeLinked(ev) {
+      const id = ev.currentTarget.dataset.id;
+      const a = state.linkedAccounts.find(x => x.id === id);
+      state.linkedAccounts = state.linkedAccounts.filter(x => x.id !== id);
+      saveState();
+      if (a) addNote('unlinked', 'Account removed', `${a.institution} · •••• ${a.account.slice(-4)} was removed.`);
+      render();
+      toast('Account removed');
+    }
+  };
+
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('[data-act]'), v = ev.target.closest('[data-view]'), fl = ev.target.closest('[data-filter]');
+    if (a && ACT[a.dataset.act]) { ev.preventDefault(); ACT[a.dataset.act](ev); return; }
+    if (v) { go(v.dataset.view); return; }
+    if (fl) { state.txFilter = fl.dataset.filter; render(); return; }
+    if (!ev.target.closest('#pop') && !ev.target.closest('#bellBtn')) closePop();
+  });
+  document.addEventListener('change', ev => {
+    if (ev.target.id === 'darkSw') { setTheme(ev.target.checked ? 'dark' : 'light'); saveState(); }
+  });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { closePop(); closeNav(); } });
+
+  $('#menuBtn').addEventListener('click', () => { $('#sidebar').classList.add('open'); $('#scrim').classList.add('open'); });
+  $('#scrim').addEventListener('click', closeNav);
+  $('#bellBtn').addEventListener('click', () => {
+    const p = $('#pop'), open = !p.classList.contains('open');
+    p.classList.toggle('open', open); $('#bellBtn').setAttribute('aria-expanded', open);
+  });
+  $('#themeBtn').addEventListener('click', () => { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); saveState(); });
+
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    $('#themeBtn').innerHTML = icon(t === 'dark' ? 'sun' : 'moon');
+  }
+  setTheme(persisted?.theme || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  render();
+})();
+</script>
+</body>
+</html>
